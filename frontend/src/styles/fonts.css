@@ -1,0 +1,394 @@
+/* 
+   Sistema Oficina Pro
+*/
+
+/* 
+   Importação De Fontes
+*/
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap');
+
+/* 
+    Raiz Variaveis
+*/
+
+:root {
+  --font-primary: 'Inter', sans-serif;
+  --font-secondary: 'Poppins', sans-serif;
+  --font-mono: 'Roboto Mono', monospace;
+
+  --font-xs: 0.75rem;
+  --font-sm: 0.875rem;
+  --font-base: 1rem;
+  --font-lg: 1.125rem;
+  --font-xl: 1.25rem;
+  --font-2xl: 1.5rem;
+  --font-3xl: 1.875rem;
+  --font-4xl: 2.25rem;
+  --font-5xl: 3rem;
+
+  --line-tight: 1.2;
+  --line-normal: 1.5;
+  --line-relaxed: 1.8;
+
+  --letter-tight: -0.02em;
+  --letter-normal: 0;
+  --letter-wide: 0.05em;
+}
+
+/* 
+   Reset Tipográfico
+*/
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-primary);
+  font-size: var(--font-base);
+  line-height: var(--line-normal);
+  letter-spacing: var(--letter-normal);
+  color: #1f2937;
+  background-color: #f9fafb;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 
+   Headings
+*/
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-secondary);
+  font-weight: 700;
+  line-height: var(--line-tight);
+  margin: 0;
+}
+
+h1 {
+  font-size: var(--font-5xl);
+  letter-spacing: var(--letter-tight);
+}
+
+h2 {
+  font-size: var(--font-4xl);
+}
+
+h3 {
+  font-size: var(--font-3xl);
+}
+
+h4 {
+  font-size: var(--font-2xl);
+}
+
+h5 {
+  font-size: var(--font-xl);
+}
+
+h6 {
+  font-size: var(--font-lg);
+}
+
+/* 
+   Parágrafos
+*/
+
+p {
+  margin: 0;
+  line-height: var(--line-relaxed);
+  color: #4b5563;
+}
+
+.text-muted {
+  color: #6b7280;
+}
+
+.text-light {
+  color: #9ca3af;
+}
+
+.text-dark {
+  color: #111827;
+}
+
+/* 
+  Links
+*/
+
+a {
+  color: #2563eb;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: #1d4ed8;
+}
+
+/* 
+   Utilitários De Fonte
+*/
+
+.font-primary {
+  font-family: var(--font-primary);
+}
+
+.font-secondary {
+  font-family: var(--font-secondary);
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+.font-light {
+  font-weight: 300;
+}
+
+.font-regular {
+  font-weight: 400;
+}
+
+.font-medium {
+  font-weight: 500;
+}
+
+.font-semibold {
+  font-weight: 600;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.font-extrabold {
+  font-weight: 800;
+}
+
+/* 
+   Tamanhos De Textos
+*/
+
+.text-xs {
+  font-size: var(--font-xs);
+}
+
+.text-sm {
+  font-size: var(--font-sm);
+}
+
+.text-base {
+  font-size: var(--font-base);
+}
+
+.text-lg {
+  font-size: var(--font-lg);
+}
+
+.text-xl {
+  font-size: var(--font-xl);
+}
+
+.text-2xl {
+  font-size: var(--font-2xl);
+}
+
+.text-3xl {
+  font-size: var(--font-3xl);
+}
+
+.text-4xl {
+  font-size: var(--font-4xl);
+}
+
+.text-5xl {
+  font-size: var(--font-5xl);
+}
+
+/* 
+   Alinhamento De Texto
+*/
+
+.text-left {
+  text-align: left;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+/* 
+   Transformações
+*/
+
+.uppercase {
+  text-transform: uppercase;
+}
+
+.lowercase {
+  text-transform: lowercase;
+}
+
+.capitalize {
+  text-transform: capitalize;
+}
+
+/* 
+   Espaçamento De Letras
+*/
+
+.tracking-tight {
+  letter-spacing: var(--letter-tight);
+}
+
+.tracking-normal {
+  letter-spacing: var(--letter-normal);
+}
+
+.tracking-wide {
+  letter-spacing: var(--letter-wide);
+}
+
+/* 
+   Classe Especiais
+ */
+
+.text-gradient {
+  background: linear-gradient(90deg, #2563eb, #7c3aed);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-shadow {
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.text-glow {
+  text-shadow: 0 0 8px rgba(37, 99, 235, 0.5);
+}
+
+/* 
+  Código E Pre
+*/
+
+code,
+pre {
+  font-family: var(--font-mono);
+  background-color: #f3f4f6;
+  border-radius: 6px;
+}
+
+code {
+  padding: 2px 6px;
+  font-size: 0.95em;
+}
+
+pre {
+  padding: 16px;
+  overflow-x: auto;
+}
+
+/* 
+   Citação De Blocos
+*/
+
+blockquote {
+  border-left: 4px solid #2563eb;
+  padding-left: 16px;
+  margin: 20px 0;
+  color: #4b5563;
+  font-style: italic;
+}
+
+/* 
+   Listas
+*/
+
+ul,
+ol {
+  padding-left: 24px;
+  color: #4b5563;
+}
+
+li {
+  margin-bottom: 8px;
+}
+
+/* 
+   Responsividade
+*/
+
+@media (max-width: 1024px) {
+  h1 {
+    font-size: 2.5rem;
+  }
+
+  h2 {
+    font-size: 2rem;
+  }
+
+  h3 {
+    font-size: 1.75rem;
+  }
+}
+
+@media (max-width: 768px) {
+  html {
+    font-size: 15px;
+  }
+
+  h1 {
+    font-size: 2rem;
+  }
+
+  h2 {
+    font-size: 1.75rem;
+  }
+
+  h3 {
+    font-size: 1.5rem;
+  }
+
+  body {
+    line-height: 1.6;
+  }
+}
+
+@media (max-width: 480px) {
+  html {
+    font-size: 14px;
+  }
+
+  h1 {
+    font-size: 1.75rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+}
+
+/* 
+   Acessibilidade
+*/
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto;
+  }
+}

@@ -1,0 +1,18 @@
+# Backend - Oficina Pro
+
+# Framework web
+fastapi==0.136.3
+uvicorn[standard]==0.48.0
+
+# Banco de dados
+SQLAlchemy==2.0.50
+psycopg2-binary==2.9.12
+
+# Configuração e validação
+pydantic==2.13.4
+pydantic-settings==2.14.1
+email-validator==2.3.0
+python-dotenv==1.2.2
+
+# Upload/form-data em rotas FastAPI
+python-multipart==0.0.29
