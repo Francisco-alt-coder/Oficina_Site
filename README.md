@@ -4,6 +4,11 @@
 
 O Oficina Pro é um sistema desenvolvido para auxiliar no gerenciamento de oficinas mecânicas. O sistema permite cadastrar clientes, veículos e realizar o controle das ordens de serviço.
 
+## Equipe Responsavel
+Francisco Wesley De Souza Dias
+
+Desenvolvedor Full Stack
+
 ## Tecnologias Utilizadas
 
 ### Frontend
