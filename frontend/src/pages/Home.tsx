@@ -1,6 +1,6 @@
-import { ArrowRight, Car, ClipboardList, Grid2X2, Home as HomeIcon, LogIn, Users, Wrench } from "lucide-react";
-import React from "react";
+import { ArrowRight, Car, ClipboardList, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Navbar } from "../components/Navbar";
 
 const modulePreview = [
   {
@@ -36,127 +36,122 @@ const modulePreview = [
 export default function Home() {
   const navigate = useNavigate();
 
+  const handleWhatsApp = () => {
+    const whatsappNumber = "559991064104";
+    const message =
+      "Olá! Gostaria de conhecer o sistema Oficina Pro e obter mais informações.";
+    const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+
+    window.open(url, "_blank");
+  };
+
   return (
-    <main className="home-page">
-      <header className="home-public-header">
-        <div className="home-public-nav">
-          <a href="#inicio" className="home-public-brand" aria-label="Oficina Pro">
-            <span>
-              <Wrench size={28} />
-            </span>
-            <div>
-              <strong>Oficina Pro</strong>
-              <p>Gestão inteligente para oficinas</p>
-            </div>
-          </a>
-
-          <nav className="home-public-links" aria-label="Navegação da página">
-            <a href="#inicio" className="is-active">
-              <HomeIcon size={20} />
-              <span>Início</span>
-            </a>
-            <a href="#funcionalidades">
-              <Grid2X2 size={20} />
-              <span>Funcionalidades</span>
-            </a>
-          </nav>
-
-          <button type="button" onClick={() => navigate("/")} className="home-login-link">
-            <LogIn size={20} />
-            <span>Entrar</span>
-          </button>
-        </div>
-      </header>
-
-      <section className="home-hero" id="inicio">
-        <div className="home-container">
-          <div className="home-hero-grid">
-            <div className="home-hero-copy">
-              <p className="home-eyebrow">Gestão inteligente para oficinas</p>
-              <h1>Software de gestão claro, rápido e profissional.</h1>
-              <p className="home-hero-text">
-                Conecte clientes, veículos e ordens de serviço em um fluxo simples.
-              </p>
-            </div>
-
-            <aside className="home-brand-panel" aria-label="Montadoras autorizadas">
-              <h2>Oficina Autorizada</h2>
-              <p>Atendimento especializado para as principais montadoras</p>
-
-              <div className="home-brand-grid">
-                <div className="home-brand-card">
-                  <img src="/fiat.png" alt="Fiat" />
-                  <span>AUTORIZADA</span>
-                </div>
-
-                <div className="home-brand-card">
-                  <img src="/volkswagen.png" alt="Volkswagen" />
-                  <span>AUTORIZADA</span>
-                </div>
-
-                <div className="home-brand-card">
-                  <img src="/chevrolet.png" alt="Chevrolet" />
-                  <span>AUTORIZADA</span>
-                </div>
-
-                <div className="home-brand-card">
-                  <img src="/toyota.png" alt="Toyota" />
-                  <span>AUTORIZADA</span>
-                </div>
+    <>
+      <Navbar />
+      <main className="home-page">
+        <section className="home-hero" id="inicio">
+          <div className="home-container">
+            <div className="home-hero-grid">
+              <div className="home-hero-copy">
+                <p className="home-eyebrow">Gestão inteligente para oficinas</p>
+                <h1>Software de gestão claro, rápido e profissional.</h1>
+                <p className="home-hero-text">
+                  Conecte clientes, veículos e ordens de serviço em um fluxo simples.
+                </p>
               </div>
 
-              <div className="home-trust-note">
-                <strong>Rede autorizada e especializada</strong>
-                <span>Peças originais, profissionais certificados e garantia de qualidade.</span>
-              </div>
-            </aside>
+              <aside className="home-brand-panel" aria-label="Montadoras autorizadas">
+                <h2>Oficina Autorizada</h2>
+                <p>Atendimento especializado para as principais montadoras</p>
+
+                <div className="home-brand-grid">
+                  <div className="home-brand-card">
+                    <img src="/fiat.png" alt="Fiat" />
+                    <span>AUTORIZADA</span>
+                  </div>
+
+                  <div className="home-brand-card">
+                    <img src="/volkswagen.png" alt="Volkswagen" />
+                    <span>AUTORIZADA</span>
+                  </div>
+
+                  <div className="home-brand-card">
+                    <img src="/chevrolet.png" alt="Chevrolet" />
+                    <span>AUTORIZADA</span>
+                  </div>
+
+                  <div className="home-brand-card">
+                    <img src="/toyota.png" alt="Toyota" />
+                    <span>AUTORIZADA</span>
+                  </div>
+                </div>
+
+                <div className="home-trust-note">
+                  <strong>Rede autorizada e especializada</strong>
+                  <span>Peças originais, profissionais certificados e garantia de qualidade.</span>
+                </div>
+              </aside>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="home-modules" id="funcionalidades">
-        <div className="home-container">
-          <div className="home-section-heading">
-            <p className="home-eyebrow">Módulos integrados</p>
-            <h2>Conheça cada módulo do sistema</h2>
-            <p>Clique em qualquer módulo para explorar suas funcionalidades completas.</p>
-          </div>
+        <section className="home-modules" id="funcionalidades">
+          <div className="home-container">
+            <div className="home-section-heading">
+              <p className="home-eyebrow">Módulos integrados</p>
+              <h2>Conheça cada módulo do sistema</h2>
+              <p>Clique em qualquer módulo para explorar suas funcionalidades completas.</p>
+            </div>
 
-          <div className="home-module-grid">
-            {modulePreview.map((module) => {
-              const ModuleIcon = module.icon;
+            <div className="home-module-grid">
+              {modulePreview.map((module) => {
+                const ModuleIcon = module.icon;
 
-              return (
-                <button
-                  key={module.id}
-                  onClick={() => navigate(module.href)}
-                  className="home-module-card"
-                >
-                  <div>
-                    <div className="home-module-icon">
-                      <ModuleIcon size={24} />
+                return (
+                  <button
+                    key={module.id}
+                    onClick={() => navigate(module.href)}
+                    className="home-module-card"
+                  >
+                    <div>
+                      <div className="home-module-icon">
+                        <ModuleIcon size={24} />
+                      </div>
+                      <h3>{module.title}</h3>
+                      <p>{module.description}</p>
                     </div>
-                    <h3>{module.title}</h3>
-                    <p>{module.description}</p>
-                  </div>
 
-                  <div className="home-module-link">
-                    Explorar
-                    <ArrowRight size={16} />
-                  </div>
-                </button>
-              );
-            })}
+                    <div className="home-module-link">
+                      Explorar
+                      <ArrowRight size={16} />
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <footer className="home-footer">
-        <div className="home-container">
-          <p className="home-footer-title">© 2026 Oficina Pro</p>
-          <p>Software profissional para oficinas mecânicas.</p>
-        </div>
-      </footer>
-    </main>
+        <footer className="home-footer">
+          <div className="home-container">
+            <p className="home-footer-title">© 2026 Oficina Pro</p>
+            <p>Software profissional para oficinas mecânicas.</p>
+          </div>
+        </footer>
+      </main>
+      <button
+        type="button"
+        onClick={handleWhatsApp}
+        className="fixed bottom-6 right-6 z-40 flex h-16 w-16 items-center justify-center rounded-full bg-[#18bf56] shadow-xl shadow-green-500/30 transition-all hover:-translate-y-0.5 hover:bg-[#12a84a]"
+        aria-label="Falar no WhatsApp"
+      >
+        <img
+          src="/whatsapp.png"
+          alt=""
+          aria-hidden="true"
+          className="h-12 w-12 rounded-full object-cover"
+        />
+      </button>
+    </>
   );
 }

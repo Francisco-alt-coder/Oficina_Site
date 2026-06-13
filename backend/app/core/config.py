@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     
     # DataBase
   
-    DATABASE_URL: str
+    DATABASE_URL: str = "sqlite:///./banco.db"
 
     # Cors
    
@@ -31,7 +31,7 @@ class Settings(BaseSettings):
 
     # Jwt
 
-    SECRET_KEY: str
+    SECRET_KEY: str = "oficina-pro-dev-secret"
 
     ALGORITHM: str = "HS256"
 

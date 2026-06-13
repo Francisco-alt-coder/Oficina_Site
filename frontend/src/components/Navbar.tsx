@@ -4,7 +4,6 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
-  UserCircle,
   Users,
   Wrench,
   X,
@@ -16,15 +15,35 @@ const NAV_ITEMS = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
   { label: "Clientes", icon: Users, href: "/clientes" },
   { label: "Veículos", icon: Car, href: "/veiculos" },
-  { label: "Ordens", icon: ClipboardList, href: "/ordens-servico" },
+  { label: "Ordem de Serviço", icon: ClipboardList, href: "/ordem-servico" },
+  { label: "Consulta", icon: ClipboardList, href: "/ordens" },
 ];
+
+type StoredUser = {
+  nome?: string;
+  name?: string;
+  email?: string;
+};
+
+function parseStoredUser(value: string | null): StoredUser | null {
+  if (!value) return null;
+
+  try {
+    return JSON.parse(value) as StoredUser;
+  } catch {
+    return null;
+  }
+}
 
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const session = localStorage.getItem("oficina-auth");
-  const loggedUser = session ? JSON.parse(session) as { email?: string } : null;
+  const loggedUser =
+    parseStoredUser(localStorage.getItem("oficina-auth")) ||
+    parseStoredUser(localStorage.getItem("user"));
+  const userLabel =
+    loggedUser?.nome || loggedUser?.name || loggedUser?.email || "Usuário logado";
 
   const handleLogout = () => {
     localStorage.removeItem("oficina-auth");
@@ -32,7 +51,7 @@ export function Navbar() {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     setMobileOpen(false);
-    navigate("/");
+    navigate("/login");
   };
 
   return (
@@ -45,7 +64,7 @@ export function Navbar() {
           <strong>Oficina Pro</strong>
         </Link>
 
-        <nav className="app-navbar-links">
+        <nav className="app-navbar-links" aria-label="Menu principal">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.href;
@@ -63,18 +82,12 @@ export function Navbar() {
           })}
         </nav>
 
-        <div className="app-navbar-actions">
-          {loggedUser && (
-            <div className="app-navbar-user" title={loggedUser.email || "Usuário logado"}>
-              <UserCircle size={20} />
-              <span>{loggedUser.email || "Logado"}</span>
-            </div>
-          )}
-          <Link to="/home" className="app-navbar-home">
-            Início
-          </Link>
-          <button type="button" onClick={handleLogout} className="app-navbar-logout">
-            <LogOut size={18} />
+        <div className="app-navbar-user-menu">
+          <div className="app-navbar-user-trigger" title={userLabel}>
+            <span>{userLabel}</span>
+          </div>
+          <button type="button" className="app-navbar-logout-button" onClick={handleLogout}>
+            <LogOut size={17} />
             <span>Sair</span>
           </button>
         </div>
@@ -108,19 +121,13 @@ export function Navbar() {
             );
           })}
 
-          <Link to="/home" onClick={() => setMobileOpen(false)}>
-            Início
-          </Link>
-          {loggedUser && (
-            <div className="app-navbar-mobile-user">
-              <UserCircle size={18} />
-              <span>{loggedUser.email || "Usuário logado"}</span>
-            </div>
-          )}
-          <button type="button" onClick={handleLogout}>
-            <LogOut size={18} />
-            <span>Sair</span>
-          </button>
+          <div className="app-navbar-mobile-user">
+            <strong title={userLabel}>{userLabel}</strong>
+            <button type="button" onClick={handleLogout}>
+              <LogOut size={17} />
+              <span>Sair</span>
+            </button>
+          </div>
         </div>
       )}
     </header>

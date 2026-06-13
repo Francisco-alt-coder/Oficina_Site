@@ -1,88 +1,16 @@
-# Node / React / Vite
-
-node_modules/
-dist/
-build/
-.vite/
-
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-pnpm-debug.log*
-
-# Arquivos temporários
-tmp/
-temp/
-
-# Typescript
-
-*.tsbuildinfo
-
-
-# Ambiente / Configurações
-
-
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Ides / Editores
-
-.vscode/
-.idea/
-
-# Arquivos do VS Code
-*.code-workspace
-
-# Sistema Operacional
-
-.DS_Store
-Thumbs.db
-
-# Python / FastApi
-
+# Python
+venv/
 __pycache__/
 *.pyc
-*.pyo
-*.pyd
-
-# Ambiente virtual
-venv/
-.env/
-.venv/
-
-# Cache Python
-.pytest_cache/
-.mypy_cache/
-
-
-# Sqlite
-
 *.db
-*.sqlite3
 
+# Node
+node_modules/
+dist/
 
-# Teste / Cobertura
+# Variáveis de ambiente
+.env
 
-coverage/
-htmlcov/
-
-
-# Build Deploy
-
-dist-ssr/
-*.local
-
-# Cache
-
-.cache/
-.parcel-cache/
-
-# Arquivos Sensíveis 
-
-secrets/
-credentials.json
+# Sistema Operacional
+.DS_Store
+Thumbs.db

@@ -18,6 +18,7 @@ export type Vehicle = {
   marca: string;
   modelo: string;
   ano: string;
+  quilometragem?: string;
   status: string;
 };
 
@@ -27,10 +28,24 @@ export type WorkOrder = {
   clientId: string;
   clienteNome: string;
   placa: string;
+  marca: string;
   modelo: string;
+  ano: string;
+  quilometragem?: string;
   problema: string;
   servico: string;
-  status: "Em andamento" | "Aguardando peça" | "Concluída";
+  prioridade: "Normal" | "Alta" | "Urgente";
+  dataAbertura: string;
+  dataFechamento: string | null;
+  observacoes: string;
+  status:
+    | "Aberta"
+    | "Em andamento"
+    | "Pendente"
+    | "Aguardando peça"
+    | "Concluída"
+    | "Finalizada"
+    | "Cancelada";
   createdAt: string;
 };
 
@@ -47,6 +62,7 @@ type AddVehicleForm = {
   marca: string;
   modelo: string;
   ano: string;
+  quilometragem: string;
 };
 
 type WorkshopContextValue = {
@@ -56,8 +72,13 @@ type WorkshopContextValue = {
   ordersCount: number;
   revenue: number;
   addClient: (client: AddClientForm) => void;
+  deleteClient: (id: number) => void;
   addVehicle: (vehicle: AddVehicleForm) => void;
+  updateVehicle: (id: number, vehicle: AddVehicleForm) => void;
+  deleteVehicle: (id: number) => void;
   addOrder: (order: Omit<WorkOrder, "id" | "createdAt">) => WorkOrder;
+  updateOrder: (id: string, order: Partial<Omit<WorkOrder, "id" | "createdAt">>) => void;
+  deleteOrder: (id: string) => void;
 };
 
 const WorkshopContext = createContext<WorkshopContextValue | undefined>(undefined);
@@ -104,7 +125,7 @@ export function WorkshopProvider({ children }: { children: React.ReactNode }) {
     setClients((prev) => [
       ...prev,
       {
-        id: prev.length + 1,
+        id: prev.reduce((maxId, current) => Math.max(maxId, current.id), 0) + 1,
         nome: client.nome,
         cpf: client.cpf,
         telefone: client.telefone,
@@ -122,16 +143,21 @@ export function WorkshopProvider({ children }: { children: React.ReactNode }) {
     }).catch(() => undefined);
   };
 
+  const deleteClient = (id: number) => {
+    setClients((prev) => prev.filter((client) => client.id !== id));
+  };
+
   const addVehicle = (vehicle: AddVehicleForm) => {
     setVehicles((prev) => [
       ...prev,
       {
-        id: prev.length + 1,
+        id: prev.reduce((maxId, current) => Math.max(maxId, current.id), 0) + 1,
         clienteNome: vehicle.clienteNome,
         placa: vehicle.placa,
         marca: vehicle.marca,
         modelo: vehicle.modelo,
         ano: vehicle.ano,
+        quilometragem: vehicle.quilometragem,
         status: "Disponível",
       },
     ]);
@@ -148,11 +174,49 @@ export function WorkshopProvider({ children }: { children: React.ReactNode }) {
     }).catch(() => undefined);
   };
 
+  const updateVehicle = (id: number, vehicle: AddVehicleForm) => {
+    setVehicles((prev) =>
+      prev.map((current) =>
+        current.id === id
+          ? {
+              ...current,
+              clienteNome: vehicle.clienteNome,
+              placa: vehicle.placa,
+              marca: vehicle.marca,
+              modelo: vehicle.modelo,
+              ano: vehicle.ano,
+              quilometragem: vehicle.quilometragem,
+            }
+          : current
+      )
+    );
+  };
+
+  const deleteVehicle = (id: number) => {
+    setVehicles((prev) => prev.filter((vehicle) => vehicle.id !== id));
+  };
+
   const addOrder = (order: Omit<WorkOrder, "id" | "createdAt">) => {
+    const shouldClose =
+      order.status === "Concluída" || order.status === "Finalizada";
+    const dataFechamento = shouldClose
+      ? order.dataFechamento ?? new Date().toISOString()
+      : null;
+    const lastSequentialId = Math.max(
+      0,
+      ...orders
+        .map((currentOrder) => currentOrder.id.match(/^OS-(\d{4})$/)?.[1])
+        .filter((value): value is string => Boolean(value))
+        .map((value) => Number(value))
+    );
+    const nextOrderNumber = lastSequentialId || orders.length;
     const newOrder: WorkOrder = {
       ...order,
-      id: `OS-${Date.now()}`,
-      createdAt: new Date().toISOString(),
+      id: `OS-${String(nextOrderNumber + 1).padStart(4, "0")}`,
+      dataFechamento,
+      createdAt: order.dataAbertura
+        ? new Date(order.dataAbertura).toISOString()
+        : new Date().toISOString(),
     };
 
     setOrders((prev) => [newOrder, ...prev]);
@@ -169,6 +233,37 @@ export function WorkshopProvider({ children }: { children: React.ReactNode }) {
     return newOrder;
   };
 
+  const updateOrder = (
+    id: string,
+    order: Partial<Omit<WorkOrder, "id" | "createdAt">>
+  ) => {
+    setOrders((prev) =>
+      prev.map((current) => {
+        if (current.id !== id) return current;
+
+        const nextStatus = order.status ?? current.status;
+        const isFinished = nextStatus === "Concluída" || nextStatus === "Finalizada";
+        const nextDataFechamento = isFinished
+          ? order.dataFechamento ?? current.dataFechamento ?? new Date().toISOString()
+          : order.dataFechamento ?? current.dataFechamento;
+
+        return {
+          ...current,
+          ...order,
+          dataFechamento: nextDataFechamento,
+        };
+      })
+    );
+  };
+
+  const deleteOrder = (id: string) => {
+    setOrders((prev) => {
+      const updatedOrders = prev.filter((order) => order.id !== id);
+      window.localStorage.setItem(STORAGE_KEYS.orders, JSON.stringify(updatedOrders));
+      return updatedOrders;
+    });
+  };
+
   const value = useMemo(
     () => ({
       clients,
@@ -177,8 +272,13 @@ export function WorkshopProvider({ children }: { children: React.ReactNode }) {
       ordersCount: orders.length,
       revenue: 0,
       addClient,
+      deleteClient,
       addVehicle,
+      updateVehicle,
+      deleteVehicle,
       addOrder,
+      updateOrder,
+      deleteOrder,
     }),
     [clients, vehicles, orders]
   );
