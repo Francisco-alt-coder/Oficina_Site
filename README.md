@@ -76,4 +76,4 @@ Oficina-Pro/
 
 ## Equipe
 
-Projeto desenvolvido para fins acadêmicos na disciplina de Desenvolvimento de Sistemas.
+Projeto desenvolvido para fins acadêmicos na disciplina de Paradigmas De Programação.
