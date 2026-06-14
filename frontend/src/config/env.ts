@@ -83,7 +83,7 @@ function validateEnv(config: Partial<EnvConfig>): EnvConfig {
  */
 export const env = validateEnv({
   // API
-  API_URL: String(getEnvVariable('API_URL', 'http://localhost:3000/api')),
+  API_URL: String(getEnvVariable('API_URL', 'http://127.0.0.1:8000/api')),
   API_TIMEOUT: Number(getEnvVariable('API_TIMEOUT', 30000)),
   API_RETRY_ATTEMPTS: Number(getEnvVariable('API_RETRY_ATTEMPTS', 3)),
 

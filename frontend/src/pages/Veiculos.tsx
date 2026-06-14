@@ -68,8 +68,8 @@ function onlyDigits(value: string) {
 export default function Veiculos() {
   const { clients, vehicles, addVehicle, updateVehicle, deleteVehicle } = useWorkshop();
   const [form, setForm] = useState(initialForm);
-  const [editingVehicleId, setEditingVehicleId] = useState<number | null>(null);
-  const [selectedVehicleId, setSelectedVehicleId] = useState<number | null>(null);
+  const [editingVehicleId, setEditingVehicleId] = useState<string | null>(null);
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -116,7 +116,7 @@ export default function Veiculos() {
     setSuccessMessage("");
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const vehicleData = {
@@ -128,16 +128,20 @@ export default function Veiculos() {
       quilometragem: onlyDigits(form.quilometragem),
     };
 
-    if (editingVehicleId) {
-      updateVehicle(editingVehicleId, vehicleData);
-      setSuccessMessage("Veiculo atualizado com sucesso");
-    } else {
-      addVehicle(vehicleData);
-      setSuccessMessage("Veiculo cadastrado com sucesso");
-    }
+    try {
+      if (editingVehicleId) {
+        await updateVehicle(editingVehicleId, vehicleData);
+        setSuccessMessage("Veiculo atualizado com sucesso");
+      } else {
+        await addVehicle(vehicleData);
+        setSuccessMessage("Veiculo cadastrado com sucesso");
+      }
 
-    setForm(initialForm);
-    setEditingVehicleId(null);
+      setForm(initialForm);
+      setEditingVehicleId(null);
+    } catch (error) {
+      console.error("Erro ao salvar veículo:", error);
+    }
   };
 
   const handleEdit = (vehicle: Vehicle) => {
@@ -154,7 +158,7 @@ export default function Veiculos() {
     setSuccessMessage("");
   };
 
-  const handleOpenDetails = (id: number) => {
+  const handleOpenDetails = (id: string) => {
     const vehicle = vehicles.find((current) => current.id === id);
     if (!vehicle) return;
 
@@ -171,11 +175,16 @@ export default function Veiculos() {
     handleEdit(selectedVehicle);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: string) => {
     const confirmed = window.confirm("Deseja excluir este veículo?");
     if (!confirmed) return;
 
-    deleteVehicle(id);
+    try {
+      await deleteVehicle(id);
+    } catch (error) {
+      console.error("Erro ao excluir veículo:", error);
+      return;
+    }
 
     if (editingVehicleId === id) {
       setForm(initialForm);

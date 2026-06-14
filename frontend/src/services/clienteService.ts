@@ -13,14 +13,15 @@ import api, {
  */
 
 export interface Cliente {
-  id: number;
+  id: string;
   nome: string;
   email: string;
   telefone: string;
   cpf: string;
-  endereco: string;
-  cidade: string;
-  estado: string;
+  endereco?: string;
+  cidade?: string;
+  estado?: string;
+  data_cadastro?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -30,9 +31,9 @@ export interface CriarClientePayload {
   email: string;
   telefone: string;
   cpf: string;
-  endereco: string;
-  cidade: string;
-  estado: string;
+  endereco?: string;
+  cidade?: string;
+  estado?: string;
 }
 
 export interface AtualizarClientePayload {
@@ -100,15 +101,15 @@ function validarCliente(payload: CriarClientePayload) {
     throw new Error('Telefone inválido.');
   }
 
-  if (!payload.endereco.trim()) {
+  if (payload.endereco !== undefined && !payload.endereco.trim()) {
     throw new Error('Endereço é obrigatório.');
   }
 
-  if (!payload.cidade.trim()) {
+  if (payload.cidade !== undefined && !payload.cidade.trim()) {
     throw new Error('Cidade é obrigatória.');
   }
 
-  if (!payload.estado.trim()) {
+  if (payload.estado !== undefined && !payload.estado.trim()) {
     throw new Error('Estado é obrigatório.');
   }
 }
@@ -124,7 +125,7 @@ function validarCliente(payload: CriarClientePayload) {
  */
 export async function listarClientes(): Promise<Cliente[]> {
   try {
-    return await apiGet<Cliente[]>(BASE_URL);
+    return await apiGet<Cliente[]>(`${BASE_URL}/`);
   } catch (error) {
     console.error('Erro ao listar clientes:', error);
     throw error;
@@ -135,7 +136,7 @@ export async function listarClientes(): Promise<Cliente[]> {
  * Buscar cliente por ID
  */
 export async function buscarClientePorId(
-  id: number
+  id: string
 ): Promise<Cliente> {
   try {
     return await apiGet<Cliente>(`${BASE_URL}/${id}`);
@@ -155,7 +156,7 @@ export async function criarCliente(
     validarCliente(payload);
 
     return await apiPost<Cliente, CriarClientePayload>(
-      BASE_URL,
+      `${BASE_URL}/`,
       payload
     );
   } catch (error) {
@@ -168,7 +169,7 @@ export async function criarCliente(
  * Atualizar Cliente
  */
 export async function atualizarCliente(
-  id: number,
+  id: string,
   payload: AtualizarClientePayload
 ): Promise<Cliente> {
   try {
@@ -201,7 +202,7 @@ export async function atualizarCliente(
  * Atualização Parcial Do Cliente
  */
 export async function atualizarParcialCliente(
-  id: number,
+  id: string,
   payload: Partial<AtualizarClientePayload>
 ): Promise<Cliente> {
   try {
@@ -218,7 +219,7 @@ export async function atualizarParcialCliente(
 /**
  * Remover Cliente
  */
-export async function removerCliente(id: number): Promise<void> {
+export async function removerCliente(id: string): Promise<void> {
   try {
     await apiDelete<void>(`${BASE_URL}/${id}`);
   } catch (error) {

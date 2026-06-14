@@ -3,7 +3,7 @@ import { Navbar } from "../components/Navbar";
 import { useWorkshop } from "../contexts/WorkshopContext";
 
 export default function Clientes() {
-  const { clients, addClient } = useWorkshop();
+  const { clients, clientsLoading, clientsError, addClient } = useWorkshop();
   const [form, setForm] = useState({
     nome: "",
     cpf: "",
@@ -11,6 +11,8 @@ export default function Clientes() {
     email: "",
   });
   const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const scrollToClientForm = () => {
     document.getElementById("client-form")?.scrollIntoView({
@@ -19,11 +21,26 @@ export default function Clientes() {
     });
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    addClient(form);
-    setForm({ nome: "", cpf: "", telefone: "", email: "" });
-    setSuccessMessage("Cliente cadastrado com sucesso");
+    setIsSubmitting(true);
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    try {
+      await addClient(form);
+      setForm({ nome: "", cpf: "", telefone: "", email: "" });
+      setSuccessMessage("Cliente cadastrado com sucesso");
+    } catch (error) {
+      console.error("Falha ao cadastrar cliente:", error);
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível cadastrar o cliente. Tente novamente."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   useEffect(() => {
@@ -106,12 +123,15 @@ export default function Clientes() {
               </div>
 
               <div className="clients-form-actions">
-                <button type="submit" className="clients-submit">
-                  Salvar Cliente
+                <button type="submit" className="clients-submit" disabled={isSubmitting}>
+                  {isSubmitting ? "Salvando..." : "Salvar Cliente"}
                 </button>
 
                 {successMessage && (
                   <span className="clients-success">{successMessage}</span>
+                )}
+                {(errorMessage || clientsError) && (
+                  <span className="clients-error">{errorMessage || clientsError}</span>
                 )}
               </div>
             </form>
@@ -122,7 +142,9 @@ export default function Clientes() {
                 <p>Aqui estão os clientes salvos durante a demonstração.</p>
 
                 <div className="clients-list">
-                  {clients.length === 0 ? (
+                  {clientsLoading ? (
+                    <div className="clients-empty">Carregando clientes...</div>
+                  ) : clients.length === 0 ? (
                     <div className="clients-empty">Nenhum cliente cadastrado ainda.</div>
                   ) : (
                     clients.map((client) => (

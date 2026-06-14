@@ -24,14 +24,15 @@ export class CarroServiceError extends Error {
  * Tipos e Interfaces
  */
 export interface Carro {
-  id: number;
+  id: string;
   marca: string;
   modelo: string;
   ano: number;
   placa: string;
   cor: string;
   quilometragem: number;
-  clienteId: number;
+  clienteId: string;
+  clienteNome?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -43,7 +44,7 @@ export interface CriarCarroPayload {
   placa: string;
   cor: string;
   quilometragem: number;
-  clienteId: number;
+  clienteId: string;
 }
 
 export interface AtualizarCarroPayload {
@@ -53,6 +54,7 @@ export interface AtualizarCarroPayload {
   placa?: string;
   cor?: string;
   quilometragem?: number;
+  clienteId?: string;
 }
 
 export interface FiltroCarro {
@@ -157,7 +159,7 @@ function validarDadosCarro(payload: CriarCarroPayload): void {
  */
 export async function listarCarros(): Promise<Carro[]> {
   try {
-    return await apiGet<Carro[]>(BASE_URL);
+    return await apiGet<Carro[]>(`${BASE_URL}/`);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Erro ao listar carros';
     console.error('Erro ao listar carros:', error);
@@ -171,8 +173,8 @@ export async function listarCarros(): Promise<Carro[]> {
  * @returns Promise<Carro> Dados do carro encontrado
  * @throws CarroServiceError se o carro não existir ou falhar a requisição
  */
-export async function buscarCarroPorId(id: number): Promise<Carro> {
-  if (!Number.isInteger(id) || id <= 0) {
+export async function buscarCarroPorId(id: string): Promise<Carro> {
+  if (!id) {
     throw new CarroServiceError('ID inválido. Deve ser um número positivo.', 'INVALID_ID', 400);
   }
 
@@ -195,7 +197,7 @@ export async function criarCarro(payload: CriarCarroPayload): Promise<Carro> {
   try {
     validarDadosCarro(payload);
 
-    return await apiPost<Carro, CriarCarroPayload>(BASE_URL, payload);
+    return await apiPost<Carro, CriarCarroPayload>(`${BASE_URL}/`, payload);
   } catch (error) {
     if (error instanceof CarroServiceError) {
       throw error;
@@ -214,10 +216,10 @@ export async function criarCarro(payload: CriarCarroPayload): Promise<Carro> {
  * @throws CarroServiceError se há erros de validação ou falha na requisição
  */
 export async function atualizarCarro(
-  id: number,
+  id: string,
   payload: AtualizarCarroPayload
 ): Promise<Carro> {
-  if (!Number.isInteger(id) || id <= 0) {
+  if (!id) {
     throw new CarroServiceError('ID inválido. Deve ser um número positivo.', 'INVALID_ID', 400);
   }
 
@@ -272,10 +274,10 @@ export async function atualizarCarro(
  * @throws CarroServiceError em caso de falha na requisição
  */
 export async function atualizarParcialCarro(
-  id: number,
+  id: string,
   payload: Partial<AtualizarCarroPayload>
 ): Promise<Carro> {
-  if (!Number.isInteger(id) || id <= 0) {
+  if (!id) {
     throw new CarroServiceError('ID inválido. Deve ser um número positivo.', 'INVALID_ID', 400);
   }
 
@@ -297,8 +299,8 @@ export async function atualizarParcialCarro(
  * @returns Promise<void>
  * @throws CarroServiceError em caso de falha na requisição
  */
-export async function removerCarro(id: number): Promise<void> {
-  if (!Number.isInteger(id) || id <= 0) {
+export async function removerCarro(id: string): Promise<void> {
+  if (!id) {
     throw new CarroServiceError('ID inválido. Deve ser um número positivo.', 'INVALID_ID', 400);
   }
 

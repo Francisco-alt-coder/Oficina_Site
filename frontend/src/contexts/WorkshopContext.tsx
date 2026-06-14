@@ -1,7 +1,21 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import {
+  criarCliente,
+  listarClientes,
+  removerCliente,
+  type CriarClientePayload,
+  type Cliente as ApiCliente,
+} from "../services/clienteService";
+import {
+  atualizarCarro,
+  criarCarro,
+  listarCarros,
+  removerCarro,
+  type Carro as ApiCarro,
+} from "../services/carroService";
 
 export type Client = {
-  id: number;
+  id: string;
   nome: string;
   cpf: string;
   telefone: string;
@@ -12,7 +26,7 @@ export type Client = {
 };
 
 export type Vehicle = {
-  id: number;
+  id: string;
   clienteNome: string;
   placa: string;
   marca: string;
@@ -24,7 +38,7 @@ export type Vehicle = {
 
 export type WorkOrder = {
   id: string;
-  vehicleId: number;
+  vehicleId: string;
   clientId: string;
   clienteNome: string;
   placa: string;
@@ -71,11 +85,14 @@ type WorkshopContextValue = {
   orders: WorkOrder[];
   ordersCount: number;
   revenue: number;
-  addClient: (client: AddClientForm) => void;
-  deleteClient: (id: number) => void;
-  addVehicle: (vehicle: AddVehicleForm) => void;
-  updateVehicle: (id: number, vehicle: AddVehicleForm) => void;
-  deleteVehicle: (id: number) => void;
+  clientsLoading: boolean;
+  clientsError: string;
+  refreshClients: () => Promise<void>;
+  addClient: (client: AddClientForm) => Promise<void>;
+  deleteClient: (id: string) => Promise<void>;
+  addVehicle: (vehicle: AddVehicleForm) => Promise<void>;
+  updateVehicle: (id: string, vehicle: AddVehicleForm) => Promise<void>;
+  deleteVehicle: (id: string) => Promise<void>;
   addOrder: (order: Omit<WorkOrder, "id" | "createdAt">) => WorkOrder;
   updateOrder: (id: string, order: Partial<Omit<WorkOrder, "id" | "createdAt">>) => void;
   deleteOrder: (id: string) => void;
@@ -98,10 +115,42 @@ function readStoredList<T>(key: string): T[] {
   }
 }
 
+function mapApiCliente(cliente: ApiCliente): Client {
+  return {
+    id: String(cliente.id),
+    nome: cliente.nome,
+    cpf: cliente.cpf,
+    telefone: cliente.telefone,
+    email: cliente.email,
+    veiculos: 0,
+    ultimaOS: "-",
+    status: "Ativo",
+  };
+}
+
+function mapApiCarro(carro: ApiCarro): Vehicle {
+  return {
+    id: String(carro.id),
+    clienteNome: carro.clienteNome ?? "",
+    placa: carro.placa,
+    marca: carro.marca,
+    modelo: carro.modelo,
+    ano: String(carro.ano),
+    quilometragem: String(carro.quilometragem ?? ""),
+    status: "Disponível",
+  };
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback;
+}
+
 export function WorkshopProvider({ children }: { children: React.ReactNode }) {
   const [clients, setClients] = useState<Client[]>(() =>
     readStoredList<Client>(STORAGE_KEYS.clients)
   );
+  const [clientsLoading, setClientsLoading] = useState(false);
+  const [clientsError, setClientsError] = useState("");
   const [vehicles, setVehicles] = useState<Vehicle[]>(() =>
     readStoredList<Vehicle>(STORAGE_KEYS.vehicles)
   );
@@ -113,6 +162,42 @@ export function WorkshopProvider({ children }: { children: React.ReactNode }) {
     window.localStorage.setItem(STORAGE_KEYS.clients, JSON.stringify(clients));
   }, [clients]);
 
+  const refreshClients = async () => {
+    setClientsLoading(true);
+    setClientsError("");
+
+    try {
+      const clientes = await listarClientes();
+      setClients(clientes.map(mapApiCliente));
+    } catch (error) {
+      const message = getErrorMessage(
+        error,
+        "Não foi possível carregar os clientes cadastrados."
+      );
+      console.error("Erro ao carregar clientes do backend:", error);
+      setClientsError(message);
+    } finally {
+      setClientsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void refreshClients();
+  }, []);
+
+  const refreshVehicles = async () => {
+    try {
+      const carros = await listarCarros();
+      setVehicles(carros.map(mapApiCarro));
+    } catch (error) {
+      console.error("Erro ao carregar veículos do backend:", error);
+    }
+  };
+
+  useEffect(() => {
+    void refreshVehicles();
+  }, []);
+
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEYS.vehicles, JSON.stringify(vehicles));
   }, [vehicles]);
@@ -121,79 +206,89 @@ export function WorkshopProvider({ children }: { children: React.ReactNode }) {
     window.localStorage.setItem(STORAGE_KEYS.orders, JSON.stringify(orders));
   }, [orders]);
 
-  const addClient = (client: AddClientForm) => {
-    setClients((prev) => [
-      ...prev,
-      {
-        id: prev.reduce((maxId, current) => Math.max(maxId, current.id), 0) + 1,
-        nome: client.nome,
-        cpf: client.cpf,
-        telefone: client.telefone,
-        email: client.email,
-        veiculos: 0,
-        ultimaOS: "-",
-        status: "Ativo",
-      },
-    ]);
+  const addClient = async (client: AddClientForm) => {
+    setClientsError("");
 
-    void fetch(`${API_BASE_URL}/clientes/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(client),
-    }).catch(() => undefined);
+    try {
+      const payload: CriarClientePayload = {
+        ...client,
+      };
+
+      await criarCliente(payload);
+      await refreshClients();
+    } catch (error) {
+      const message = getErrorMessage(
+        error,
+        "Não foi possível cadastrar o cliente."
+      );
+      console.error("Erro ao cadastrar cliente no backend:", error);
+      setClientsError(message);
+      throw error;
+    }
   };
 
-  const deleteClient = (id: number) => {
-    setClients((prev) => prev.filter((client) => client.id !== id));
+  const deleteClient = async (id: string) => {
+    setClientsError("");
+
+    try {
+      await removerCliente(id);
+      await refreshClients();
+    } catch (error) {
+      const message = getErrorMessage(
+        error,
+        "Não foi possível excluir o cliente."
+      );
+      console.error("Erro ao excluir cliente no backend:", error);
+      setClientsError(message);
+      throw error;
+    }
   };
 
-  const addVehicle = (vehicle: AddVehicleForm) => {
-    setVehicles((prev) => [
-      ...prev,
-      {
-        id: prev.reduce((maxId, current) => Math.max(maxId, current.id), 0) + 1,
-        clienteNome: vehicle.clienteNome,
-        placa: vehicle.placa,
-        marca: vehicle.marca,
-        modelo: vehicle.modelo,
-        ano: vehicle.ano,
-        quilometragem: vehicle.quilometragem,
-        status: "Disponível",
-      },
-    ]);
-
-    void fetch(`${API_BASE_URL}/carros/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        placa: vehicle.placa,
-        marca: vehicle.marca,
-        modelo: vehicle.modelo,
-        ano: Number(vehicle.ano),
-      }),
-    }).catch(() => undefined);
-  };
-
-  const updateVehicle = (id: number, vehicle: AddVehicleForm) => {
-    setVehicles((prev) =>
-      prev.map((current) =>
-        current.id === id
-          ? {
-              ...current,
-              clienteNome: vehicle.clienteNome,
-              placa: vehicle.placa,
-              marca: vehicle.marca,
-              modelo: vehicle.modelo,
-              ano: vehicle.ano,
-              quilometragem: vehicle.quilometragem,
-            }
-          : current
-      )
+  const addVehicle = async (vehicle: AddVehicleForm) => {
+    const cliente = clients.find(
+      (current) => current.nome.toLowerCase() === vehicle.clienteNome.toLowerCase()
     );
+
+    if (!cliente) {
+      throw new Error("Cliente não encontrado para vincular ao veículo.");
+    }
+
+    await criarCarro({
+      clienteId: cliente.id,
+      placa: vehicle.placa,
+      marca: vehicle.marca,
+      modelo: vehicle.modelo,
+      ano: Number(vehicle.ano),
+      cor: "Não informada",
+      quilometragem: Number(vehicle.quilometragem || 0),
+    });
+    await refreshVehicles();
   };
 
-  const deleteVehicle = (id: number) => {
-    setVehicles((prev) => prev.filter((vehicle) => vehicle.id !== id));
+  const updateVehicle = async (id: string, vehicle: AddVehicleForm) => {
+    const cliente = clients.find(
+      (current) => current.nome.toLowerCase() === vehicle.clienteNome.toLowerCase()
+    );
+
+    if (!cliente) {
+      throw new Error("Cliente não encontrado para vincular ao veículo.");
+    }
+
+    await atualizarCarro(id, {
+      clienteId: cliente.id,
+      placa: vehicle.placa,
+      marca: vehicle.marca,
+      modelo: vehicle.modelo,
+      ano: Number(vehicle.ano),
+      cor: "Não informada",
+      quilometragem: Number(vehicle.quilometragem || 0),
+    });
+    await refreshVehicles();
+  };
+
+  const deleteVehicle = async (id: string) => {
+    await removerCarro(id);
+    await refreshVehicles();
   };
 
   const addOrder = (order: Omit<WorkOrder, "id" | "createdAt">) => {
@@ -271,6 +366,9 @@ export function WorkshopProvider({ children }: { children: React.ReactNode }) {
       orders,
       ordersCount: orders.length,
       revenue: 0,
+      clientsLoading,
+      clientsError,
+      refreshClients,
       addClient,
       deleteClient,
       addVehicle,
@@ -280,7 +378,7 @@ export function WorkshopProvider({ children }: { children: React.ReactNode }) {
       updateOrder,
       deleteOrder,
     }),
-    [clients, vehicles, orders]
+    [clients, vehicles, orders, clientsLoading, clientsError]
   );
 
   return (

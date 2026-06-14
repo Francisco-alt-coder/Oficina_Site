@@ -32,10 +32,12 @@ function formatCPF(cpf: string) {
 }
 
 export default function Clientes() {
-  const { clients, addClient, deleteClient } = useWorkshop();
+  const { clients, clientsLoading, clientsError, addClient, deleteClient } = useWorkshop();
   const [form, setForm] = useState(initialForm);
   const [successMessage, setSuccessMessage] = useState("");
-  const [visibleCpfIds, setVisibleCpfIds] = useState<number[]>([]);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [visibleCpfIds, setVisibleCpfIds] = useState<string[]>([]);
 
   const handleFieldChange = (
     field: "nome" | "cpf" | "telefone" | "email",
@@ -44,23 +46,47 @@ export default function Clientes() {
     setForm((current) => ({ ...current, [field]: value }));
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    addClient(form);
-    setForm(initialForm);
-    setSuccessMessage("Cliente cadastrado com sucesso");
+    setIsSubmitting(true);
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    try {
+      await addClient(form);
+      setForm(initialForm);
+      setSuccessMessage("Cliente cadastrado com sucesso");
+    } catch (error) {
+      console.error("Falha ao cadastrar cliente:", error);
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível cadastrar o cliente. Tente novamente."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleDeleteClient = (id: number) => {
+  const handleDeleteClient = async (id: string) => {
     const confirmDelete = window.confirm("Deseja excluir este cliente?");
 
     if (!confirmDelete) return;
 
-    deleteClient(id);
-    setVisibleCpfIds((current) => current.filter((clientId) => clientId !== id));
+    try {
+      await deleteClient(id);
+      setVisibleCpfIds((current) => current.filter((clientId) => clientId !== id));
+    } catch (error) {
+      console.error("Falha ao excluir cliente:", error);
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível excluir o cliente. Tente novamente."
+      );
+    }
   };
 
-  const toggleCpfVisibility = (id: number) => {
+  const toggleCpfVisibility = (id: string) => {
     setVisibleCpfIds((current) =>
       current.includes(id)
         ? current.filter((clientId) => clientId !== id)
@@ -154,13 +180,16 @@ export default function Clientes() {
               </div>
 
               <div className="clients-form-actions">
-                <button type="submit" className="vehicles-submit">
+                <button type="submit" className="vehicles-submit" disabled={isSubmitting}>
                   <Save size={18} />
-                  <span>Salvar Cliente</span>
+                  <span>{isSubmitting ? "Salvando..." : "Salvar Cliente"}</span>
                 </button>
 
                 {successMessage && (
                   <span className="clients-success">{successMessage}</span>
+                )}
+                {(errorMessage || clientsError) && (
+                  <span className="clients-error">{errorMessage || clientsError}</span>
                 )}
               </div>
             </form>
@@ -171,7 +200,9 @@ export default function Clientes() {
                 <p>Aqui estão os clientes salvos durante a demonstração.</p>
 
                 <div className="clients-list">
-                  {clients.length === 0 ? (
+                  {clientsLoading ? (
+                    <div className="clients-empty">Carregando clientes...</div>
+                  ) : clients.length === 0 ? (
                     <div className="clients-empty">Nenhum cliente cadastrado ainda.</div>
                   ) : (
                     clients.map((client) => (
