@@ -42,7 +42,7 @@ export default function OrdemServico() {
     [form.vehicleId, vehicles]
   );
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!selectedVehicle) {
       setFeedback("Selecione um veículo para criar a ordem de serviço.");
@@ -53,9 +53,9 @@ export default function OrdemServico() {
       ? `${form.problema}\n\nObservações: ${form.observacoes}`
       : form.problema;
 
-    addOrder({
+    await addOrder({
       vehicleId: selectedVehicle.id,
-      clientId: String(selectedVehicle.id),
+      clientId: selectedVehicle.clientId,
       clienteNome: selectedVehicle.clienteNome,
       placa: selectedVehicle.placa,
       marca: selectedVehicle.marca,

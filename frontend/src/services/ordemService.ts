@@ -13,15 +13,24 @@ import api, {
  */
 
 export type StatusOrdem =
+  | 'Aberta'
   | 'Pendente'
   | 'Em andamento'
+  | 'Aguardando peça'
   | 'Concluída'
+  | 'Finalizada'
   | 'Cancelada';
 
 export interface OrdemServico {
-  id: number;
-  clienteId: number;
-  carroId: number;
+  id: string;
+  clienteId: string;
+  carroId: string;
+  clienteNome?: string;
+  placa?: string;
+  marca?: string;
+  modelo?: string;
+  ano?: number;
+  quilometragem?: number;
   descricao: string;
   status: StatusOrdem;
   valor: number;
@@ -33,8 +42,8 @@ export interface OrdemServico {
 }
 
 export interface CriarOrdemPayload {
-  clienteId: number;
-  carroId: number;
+  clienteId: string;
+  carroId: string;
   descricao: string;
   valor: number;
   observacoes?: string;
@@ -50,8 +59,8 @@ export interface AtualizarOrdemPayload {
 
 export interface FiltroOrdem {
   status?: StatusOrdem;
-  clienteId?: number;
-  carroId?: number;
+  clienteId?: string;
+  carroId?: string;
   dataInicio?: string;
   dataFim?: string;
 }
@@ -118,7 +127,7 @@ function validarCriacao(payload: CriarOrdemPayload) {
  */
 export async function listarOrdens(): Promise<OrdemServico[]> {
   try {
-    return await apiGet<OrdemServico[]>(BASE_URL);
+    return await apiGet<OrdemServico[]>(`${BASE_URL}/`);
   } catch (error) {
     console.error('Erro ao listar ordens:', error);
     throw error;
@@ -129,7 +138,7 @@ export async function listarOrdens(): Promise<OrdemServico[]> {
  * Buscar Ordem Por ID
  */
 export async function buscarOrdemPorId(
-  id: number
+  id: string
 ): Promise<OrdemServico> {
   try {
     return await apiGet<OrdemServico>(`${BASE_URL}/${id}`);
@@ -149,7 +158,7 @@ export async function criarOrdem(
     validarCriacao(payload);
 
     return await apiPost<OrdemServico, CriarOrdemPayload>(
-      BASE_URL,
+      `${BASE_URL}/`,
       payload
     );
   } catch (error) {
@@ -162,7 +171,7 @@ export async function criarOrdem(
  * Atualizar Ordem
  */
 export async function atualizarOrdem(
-  id: number,
+  id: string,
   payload: AtualizarOrdemPayload
 ): Promise<OrdemServico> {
   try {
@@ -203,7 +212,7 @@ export async function atualizarOrdem(
  * Atualização Parcial
  */
 export async function atualizarParcialOrdem(
-  id: number,
+  id: string,
   payload: Partial<AtualizarOrdemPayload>
 ): Promise<OrdemServico> {
   try {
@@ -220,7 +229,7 @@ export async function atualizarParcialOrdem(
 /**
  * Remover Ordem
  */
-export async function removerOrdem(id: number): Promise<void> {
+export async function removerOrdem(id: string): Promise<void> {
   try {
     await apiDelete<void>(`${BASE_URL}/${id}`);
   } catch (error) {

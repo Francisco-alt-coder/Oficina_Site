@@ -13,6 +13,13 @@ import {
   removerCarro,
   type Carro as ApiCarro,
 } from "../services/carroService";
+import {
+  atualizarOrdem,
+  criarOrdem,
+  listarOrdens,
+  removerOrdem,
+  type OrdemServico as ApiOrdem,
+} from "../services/ordemService";
 
 export type Client = {
   id: string;
@@ -27,6 +34,7 @@ export type Client = {
 
 export type Vehicle = {
   id: string;
+  clientId: string;
   clienteNome: string;
   placa: string;
   marca: string;
@@ -93,9 +101,9 @@ type WorkshopContextValue = {
   addVehicle: (vehicle: AddVehicleForm) => Promise<void>;
   updateVehicle: (id: string, vehicle: AddVehicleForm) => Promise<void>;
   deleteVehicle: (id: string) => Promise<void>;
-  addOrder: (order: Omit<WorkOrder, "id" | "createdAt">) => WorkOrder;
-  updateOrder: (id: string, order: Partial<Omit<WorkOrder, "id" | "createdAt">>) => void;
-  deleteOrder: (id: string) => void;
+  addOrder: (order: Omit<WorkOrder, "id" | "createdAt">) => Promise<WorkOrder>;
+  updateOrder: (id: string, order: Partial<Omit<WorkOrder, "id" | "createdAt">>) => Promise<void>;
+  deleteOrder: (id: string) => Promise<void>;
 };
 
 const WorkshopContext = createContext<WorkshopContextValue | undefined>(undefined);
@@ -131,6 +139,7 @@ function mapApiCliente(cliente: ApiCliente): Client {
 function mapApiCarro(carro: ApiCarro): Vehicle {
   return {
     id: String(carro.id),
+    clientId: String(carro.clienteId),
     clienteNome: carro.clienteNome ?? "",
     placa: carro.placa,
     marca: carro.marca,
@@ -138,6 +147,37 @@ function mapApiCarro(carro: ApiCarro): Vehicle {
     ano: String(carro.ano),
     quilometragem: String(carro.quilometragem ?? ""),
     status: "Disponível",
+  };
+}
+
+function normalizeApiStatus(status: string): WorkOrder["status"] {
+  if (status === "Em andamento") return "Em andamento";
+  if (status === "Pendente") return "Pendente";
+  if (status === "Concluída") return "Concluída";
+  if (status === "Finalizada") return "Finalizada";
+  if (status === "Cancelada") return "Cancelada";
+  return "Aberta";
+}
+
+function mapApiOrdem(ordem: ApiOrdem): WorkOrder {
+  return {
+    id: String(ordem.id),
+    vehicleId: String(ordem.carroId),
+    clientId: String(ordem.clienteId),
+    clienteNome: ordem.clienteNome ?? "",
+    placa: ordem.placa ?? "",
+    marca: ordem.marca ?? "",
+    modelo: ordem.modelo ?? "",
+    ano: String(ordem.ano ?? ""),
+    quilometragem: String(ordem.quilometragem ?? ""),
+    problema: ordem.descricao,
+    servico: ordem.descricao,
+    prioridade: "Normal",
+    dataAbertura: ordem.dataEntrada,
+    dataFechamento: ordem.dataSaida ?? null,
+    observacoes: ordem.observacoes ?? "",
+    status: normalizeApiStatus(ordem.status),
+    createdAt: ordem.createdAt ?? ordem.dataEntrada,
   };
 }
 
@@ -196,6 +236,19 @@ export function WorkshopProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     void refreshVehicles();
+  }, []);
+
+  const refreshOrders = async () => {
+    try {
+      const ordens = await listarOrdens();
+      setOrders(ordens.map(mapApiOrdem));
+    } catch (error) {
+      console.error("Erro ao carregar ordens do backend:", error);
+    }
+  };
+
+  useEffect(() => {
+    void refreshOrders();
   }, []);
 
   useEffect(() => {
@@ -291,39 +344,17 @@ export function WorkshopProvider({ children }: { children: React.ReactNode }) {
     await refreshVehicles();
   };
 
-  const addOrder = (order: Omit<WorkOrder, "id" | "createdAt">) => {
-    const shouldClose =
-      order.status === "Concluída" || order.status === "Finalizada";
-    const dataFechamento = shouldClose
-      ? order.dataFechamento ?? new Date().toISOString()
-      : null;
-    const lastSequentialId = Math.max(
-      0,
-      ...orders
-        .map((currentOrder) => currentOrder.id.match(/^OS-(\d{4})$/)?.[1])
-        .filter((value): value is string => Boolean(value))
-        .map((value) => Number(value))
-    );
-    const nextOrderNumber = lastSequentialId || orders.length;
-    const newOrder: WorkOrder = {
-      ...order,
-      id: `OS-${String(nextOrderNumber + 1).padStart(4, "0")}`,
-      dataFechamento,
-      createdAt: order.dataAbertura
-        ? new Date(order.dataAbertura).toISOString()
-        : new Date().toISOString(),
-    };
+  const addOrder = async (order: Omit<WorkOrder, "id" | "createdAt">) => {
+    const createdOrder = await criarOrdem({
+      clienteId: order.clientId,
+      carroId: order.vehicleId,
+      descricao: order.servico,
+      valor: 0,
+      observacoes: order.observacoes,
+    });
+    const newOrder = mapApiOrdem(createdOrder);
 
-    setOrders((prev) => [newOrder, ...prev]);
-
-    void fetch(`${API_BASE_URL}/ordens/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        descricao: order.servico,
-        valor: 0,
-      }),
-    }).catch(() => undefined);
+    await refreshOrders();
 
     return newOrder;
   };
@@ -332,31 +363,17 @@ export function WorkshopProvider({ children }: { children: React.ReactNode }) {
     id: string,
     order: Partial<Omit<WorkOrder, "id" | "createdAt">>
   ) => {
-    setOrders((prev) =>
-      prev.map((current) => {
-        if (current.id !== id) return current;
-
-        const nextStatus = order.status ?? current.status;
-        const isFinished = nextStatus === "Concluída" || nextStatus === "Finalizada";
-        const nextDataFechamento = isFinished
-          ? order.dataFechamento ?? current.dataFechamento ?? new Date().toISOString()
-          : order.dataFechamento ?? current.dataFechamento;
-
-        return {
-          ...current,
-          ...order,
-          dataFechamento: nextDataFechamento,
-        };
-      })
-    );
+    return atualizarOrdem(id, {
+      descricao: order.servico ?? order.problema,
+      status: order.status,
+      valor: 0,
+      dataSaida: order.dataFechamento ?? undefined,
+      observacoes: order.observacoes,
+    }).then(() => refreshOrders());
   };
 
   const deleteOrder = (id: string) => {
-    setOrders((prev) => {
-      const updatedOrders = prev.filter((order) => order.id !== id);
-      window.localStorage.setItem(STORAGE_KEYS.orders, JSON.stringify(updatedOrders));
-      return updatedOrders;
-    });
+    return removerOrdem(id).then(() => refreshOrders());
   };
 
   const value = useMemo(
